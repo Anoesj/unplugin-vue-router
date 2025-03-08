@@ -61,6 +61,9 @@ declare module 'vue-router/auto-routes' {
       { path: ParamValue<true> },
       // these are the normalized params as found in useRoute().params
       { path: ParamValue<false> }
+      // if the route has nested routes, pass a union of their names as 5th generic,
+      // otherwise pass never or omit this generic entirely
+      'custom-dynamic-child-name-1' | 'custom-dynamic-child-name-2'
     >
   }
 }
@@ -73,16 +76,34 @@ You can now pass a _type param_ to the generic route location types to narrow do
 import 'unplugin-vue-router/client'
 import './typed-router.d'
 import { useRoute, type RouteLocationNormalizedLoaded } from 'vue-router'
+import type { RouteNameWithChildren } from 'vue-router/auto-routes'
 // ---cut-end---
 // @errors: 2322 2339
 // @moduleResolution: bundler
 // these are all valid
-const userWithIdCasted = useRoute() as RouteLocationNormalizedLoaded<'/users/[id]'>
-userWithIdCasted.params.id
-const userWithIdTypeParam = useRoute<'/users/[id]'>()
-userWithIdTypeParam.params.id
+const userRouteWithIdCasted = useRoute() as RouteLocationNormalizedLoaded<'/users/[id]'>
+userRouteWithIdCasted.params.id
+const userRouteWithIdTypeParam = useRoute<'/users/[id]'>()
+userRouteWithIdTypeParam.params.id
 // 👇 this one is the easiest to write because it autocompletes
-const userWithIdParam = useRoute('/users/[id]')
-userWithIdParam.params
-//              ^?
+const userRouteWithIdParam = useRoute('/users/[id]')
+userRouteWithIdParam.params
+//                   ^?
+```
+
+For routes that contain nested routes, you can use the `RouteNameWithChildren` helper to get the typings of all possible current routes.
+
+```ts twoslash
+// ---cut-start---
+import 'unplugin-vue-router/client'
+import './typed-router.d'
+import { useRoute } from 'vue-router'
+import type { RouteNameWithChildren } from 'vue-router/auto-routes'
+// ---cut-end---
+// @errors: 2322 2339
+// @moduleResolution: bundler
+type Testttt = RouteNameWithChildren<'/users/[id]'>
+const userRouteAndNestedRoutesWithIdParam = useRoute<RouteNameWithChildren<'/users/[id]'>>()
+userRouteAndNestedRoutesWithIdParam.params
+//                                  ^?
 ```

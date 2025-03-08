@@ -27,6 +27,16 @@ declare module 'vue-router/auto-routes' {
     router: Router,
     hotUpdateCallback?: (newRoutes: RouteRecordRaw[]) => void
   ): void
+
+  /**
+   * Returns a union of route names from children of the route with given route name
+   */
+  export type GetChildrenRouteNames<T extends keyof RouteNamedMap> = RouteNamedMap[T] extends RouteRecordInfo<any, any, any, any, any, infer N> ? N : never
+
+  /**
+   * Returns a union of given route name and the route names of children of that route
+   */
+  export type RouteNameWithChildren<T extends keyof RouteNamedMap> = T | GetChildrenRouteNames<T>
 }
 
 declare module 'vue-router' {
