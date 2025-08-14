@@ -1,5 +1,6 @@
 import type { TreeNode } from '../core/tree'
 import { generateRouteParams } from './generateRouteParams'
+import { pad, formatMultilineUnion } from '../utils'
 
 export function generateRouteNamedMap(node: TreeNode): string {
   if (node.isRoot()) {
@@ -11,7 +12,7 @@ ${node.getChildrenSorted().map(generateRouteNamedMap).join('')}}`
     // if the node has a filePath, it's a component, it has a routeName and it should be referenced in the RouteNamedMap
     // otherwise it should be skipped to avoid navigating to a route that doesn't render anything
     (node.value.components.size > 0 && node.name
-      ? `  '${node.name}': ${generateRouteRecordInfo(node)},\n`
+      ? pad(2, `'${node.name}': ${generateRouteRecordInfo(node)},\n`)
       : '') +
     (node.children.size > 0
       ? node.getChildrenSorted().map(generateRouteNamedMap).join('\n')
@@ -27,7 +28,7 @@ export function generateRouteRecordInfo(node: TreeNode) {
     generateRouteParams(node, false),
   ]
 
-  let childRouteNames = 'never'
+  let childRouteNames = ['never']
 
   if (node.children.size > 0) {
     // TODO: remove Array.from() once Node 20 support is dropped
@@ -36,17 +37,19 @@ export function generateRouteRecordInfo(node: TreeNode) {
       .filter(
         (childRoute) => childRoute.value.components.size > 0 && childRoute.name
       )
-      .map((childRoute) => `'${childRoute.name}'`)
+      .map((childRoute) => childRoute.name)
       .sort()
 
     if (deepNamedChildren.length > 0) {
-      childRouteNames = deepNamedChildren
-        .map((childRouteName) => `| ${childRouteName}`)
-        .join('\n    ')
+      childRouteNames = deepNamedChildren.map(
+        (childRouteName) => `'${childRouteName}'`
+      )
     }
   }
 
-  typeParams.push(childRouteNames)
+  typeParams.push(formatMultilineUnion(childRouteNames, 4))
 
-  return `RouteRecordInfo<${typeParams.map((line) => `\n    ${line}`).join(',\n')}\n  >`
+  return `RouteRecordInfo<
+${typeParams.map((line) => pad(4, line)).join(',\n')}
+  >`
 }
