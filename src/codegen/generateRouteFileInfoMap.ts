@@ -79,8 +79,12 @@ function generateRouteFileInfoLines(
 
   const routeNames = [node, ...node.getChildrenDeepSorted()]
     // an unnamed route cannot be accessed in types
-    .filter((node): node is TreeNode & { name: string } => !!node.name)
-    .map((node) => node.name)
+    .reduce<string[]>((acc, node) => {
+      if (node.isNamed()) {
+        acc.push(node.name)
+      }
+      return acc
+    }, [])
 
   // Most of the time we only have one view, but with named views we can have multiple.
   const currentRouteInfo =
